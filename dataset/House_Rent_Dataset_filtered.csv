@@ -1,4 +1,4 @@
-BHK,Rent,Size,Area Locality,City,Furnishing Status,Tenant Preferred,Bathroom
+BHK,Rent,Size,AreaLocality,City,FurnishingStatus,TenantPreferred,Bathroom
 2,10000,1100,Bandel,Kolkata,Unfurnished,Bachelors/Family,2
 2,20000,800,"Phool Bagan, Kankurgachi",Kolkata,Semi-Furnished,Bachelors/Family,1
 2,17000,1000,Salt Lake City Sector 2,Kolkata,Semi-Furnished,Bachelors/Family,1
