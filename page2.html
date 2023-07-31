@@ -85,15 +85,17 @@
 
 <body onload="init()">
 
-    <div class="container">
+    <header>
         <h1>House Rent Dashboard</h1>
-        <h2>Average Rent for a house in the popular cities in India</h2>
-        <div>
-            <a href="#page1" >1. Average Rent for a house in cities</a>
-            <a href="#page2" >2. Furnishing vs Rent</a>
-            <a href="#page3" >3. Average Square Feet of the house vs Rent</a>
+        <h2>Furnishing vs Rent</h2>
+        <div id="buttonContainer">
+            <button onclick="location.href='https://arunam2.github.io/page1.html'">1. Average Rent for a house in cities</button>
+            <button onclick="location.href='https://arunam2.github.io/page2.html'">2. Furnishing vs Rent</button>
+            <button onclick="location.href='https://arunam2.github.io/page3.html'">3. Average Square Feet of the house vs Rent</button>
         </div>
+    </header>
 
+    <div class="container">
         <div class="drop-down" id="filter">
                 <label for="cityDropdown">Select City:</label>
                 <select id="cityDropdown">
