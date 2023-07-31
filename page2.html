@@ -230,10 +230,25 @@
                         .attr('transform', 'rotate(-45)');
 
 
+                    svg.append("text")
+                        .attr("class", "axis-label")
+                        .attr("x", width / 2)
+                        .attr("y", height + margin.top + 65)
+                        .style("text-anchor", "middle")
+                        .text("Furnishing Status");
+
                     const yAxis = d3.axisLeft(yScale);
                     svg.append('g')
                         .attr('class', 'axis-y')
                         .call(yAxis);
+
+                        svg.append("text")
+                        .attr("class", "axis-label")
+                        .attr("transform", "rotate(-90)")
+                        .attr("x", -height / 2)
+                        .attr("y", -margin.left + 12)
+                        .style("text-anchor", "middle")
+                        .text("Average Rent");
 
                     var chart1 = svg.selectAll('.bar')
                         .data(avgRentData)
