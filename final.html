@@ -1,0 +1,232 @@
+<html>
+
+<head>
+    <title>House Rent Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: rgba(228, 209, 185, 0.295);
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .container_data {
+            max-width: 700px;
+            margin: 200 auto;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        h2 {
+            text-align: center;
+        }
+
+        a {
+            padding: 10px;
+        }
+
+        .drop-down {
+            justify-content: center;
+            padding: 10px;
+            align-content: center;
+            margin-left: auto;
+            margin-right: auto;
+            width: 40%;
+        }
+
+        .chart {
+            width: 100%;
+            height: 400px;
+            margin: 0 auto;
+        }
+
+        .bar {
+            fill: rgb(243, 164, 115);
+        }
+
+        .bar:hover {
+            fill: rgb(254, 143, 7);
+        }
+
+        .axis-x text {
+            font-size: 12px;
+            text-anchor: end;
+            transform: rotate(-45deg);
+        }
+
+        .axis-y text {
+            font-size: 12px;
+        }
+
+        .tooltip {
+            position: absolute;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px;
+            border-radius: 10px;
+            pointer-events: none;
+            width: 15%;
+            height: 50px;
+            top: 400;
+            text-align: left;
+            left: 200px;
+        }
+    </style>
+</head>
+
+<body onload="init()">
+
+    <div class="container">
+        <h1>House Rent Dashboard</h1>
+        <h2>Average Rent for a house in the popular cities in India</h2>
+        <div>
+            <a href="#page1" >1. Average Rent for a house in cities</a>
+            <a href="#page2" >2. Furnishing vs Rent</a>
+            <a href="#page3" >3. Average Square Feet of the house vs Rent</a>
+        </div>
+
+        <div class="drop-down" id="filter">
+                <label for="cityDropdown">Select City:</label>
+                <select id="cityDropdown">
+                </select>
+        </div>
+        <div class="chart"></div>
+    </div>
+    <script src="https://d3js.org/d3.v6.min.js"></script>
+    <div class="page1">
+    <script>
+async function init() {
+   const data= await d3.csv('https://arunam2.github.io/dataset/House_Rent_Dataset_filtered.csv');
+console.log(data);
+data.forEach(d => {
+        d.Rent = d.Rent;
+        d.BHK = d.BHK;
+        d.City = d.City;
+        d.FurnishingStatus = d.FurnishingStatus;
+      });
+      console.log(data[0].FurnishingStatus);
+
+      const cities = Array.from(new Set(data.map(d => d.City)));
+      const dropdown = document.getElementById("cityDropdown");
+      cities.forEach(city => {
+        const option = document.createElement("option");
+        option.text = city;
+        dropdown.add(option);
+      });
+
+      function createBarChart(dataset, city) {
+
+        const filteredData = dataset.filter(item => item.City === city);
+      const groupedData = d3.group(filteredData, d => d.BHK);
+      
+      const avgRentData = Array.from(groupedData, ([BHK, values]) => ({
+        BHK: BHK,
+        AvgRent: d3.mean(values, d => d.Rent)
+      }));
+
+      avgRentData.sort((a, b) => a.BHK - b.BHK);
+        const margin = { top: 20, right: 20, bottom: 50, left: 60 };
+            const width = 600 - margin.left - margin.right;
+            const height = 600 - margin.top - margin.bottom;
+
+            var tooltip = d3.select("body")
+                .append("div")
+                .attr("class", "tooltip")
+                .style("opacity", 0);
+
+            const svg = d3.select('.chart')
+                .append('svg')
+                .attr('width', width + margin.left + margin.right)
+                .attr('height', height + margin.top + margin.bottom)
+                .append('g')
+                .attr('transform', `translate(${margin.left},${margin.top})`);
+
+            const xScale = d3.scaleBand()
+                .domain(avgRentData.map(d => d.BHK))
+                .range([0, width])
+                .padding(0.2);
+
+            const yScale = d3.scaleLinear()
+                .domain([0, d3.max(avgRentData, d => d.AvgRent)])
+                .range([height, 0]);
+
+            const xAxis = d3.axisBottom(xScale);
+            svg.append('g')
+                .attr('class', 'axis-x')
+                .attr('transform', `translate(0,${height})`)
+                .call(xAxis)
+                .selectAll('text')
+                .style('text-anchor', 'end')
+                .attr('transform', 'rotate(-45)');
+
+
+            const yAxis = d3.axisLeft(yScale);
+            svg.append('g')
+                .attr('class', 'axis-y')
+                .call(yAxis);
+
+            var chart1 = svg.selectAll('.bar')
+                .data(avgRentData)
+                .enter()
+                .append('rect')
+                .attr('class', 'bar')
+                .attr('x', d => xScale(d.BHK))
+                .attr('y', d => yScale(d.AvgRent))
+                .attr('width', xScale.bandwidth())
+                .attr('height', d => height - yScale(d.AvgRent));
+
+            chart1.on('mouseover', (event, d) => {
+                tooltip.transition().duration(200).style("opacity", 0.9);
+                tooltip.html( "City: " + city+ "<br/>"+"BHK: " + d.BHK + "<br/>" + "Avg. Rent: " + d.AvgRent.toFixed(2) )
+                    .style("left", (event.pageX) + "px")
+                    .style("top", (event.pageY - 28) + "px");
+            })
+                .on('mouseout', () => {
+                    tooltip.transition().duration(500).style("opacity", 0);
+                });
+
+        }
+        function updateChart() {
+        const selectedCity = document.getElementById("cityDropdown").value;
+        d3.select(".chart svg").remove();
+        createBarChart(data, selectedCity);
+        }
+
+        document.getElementById("cityDropdown").onchange = updateChart;
+
+        const initialCity = cities[0];
+      createBarChart(data, initialCity);
+
+}
+    </script>
+    </div>
+    <div class="container_data">
+        <p>The message of this narrative visualization is to explore the trends in house rent prices across different
+            cities in India. It aims to highlight the variations in rent prices depending on the area of the property
+            and the locality within a city, to help the potential for users to make informed decisions when renting a
+            property.</p>
+        <p>The narrative visualization will follow the "drill-down story" structure. It will present an overview of rent
+            prices in India, allowing users to explore different cities from there. Users can then drill down into
+            specific cities to understand the rental trends further. This structure will enable users to access
+            different levels of detail and insights, encouraging a self-guided exploration.</p>
+        <p>The narrative visualization will be interactive, allowing users to explore the data and make comparisons
+            between different cities. It will also include annotations to highlight interesting insights and trends in
+            the data.</p>
+        <p>The narrative visualization will be created using D3.js, a JavaScript library for creating data
+            visualizations. It will be embedded in a web page using HTML and CSS.</p>
+        <p>The dataset is from Kaggle, which can be found<a
+                href="https://www.kaggle.com/datasets/iamsouravbanerjee/house-rent-prediction-dataset?resource=download">here</a>
+        </p>
+    </div>
+</body>
+
+</html>
