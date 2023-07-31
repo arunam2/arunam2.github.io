@@ -80,7 +80,8 @@
             text-align: left;
             left: 200px;
         }
-            #buttonContainer {
+
+        #buttonContainer {
             display: flex;
             justify-content: space-between;
             max-width: 500px;
@@ -111,7 +112,12 @@
             border-top-right-radius: 0;
             border-bottom-right-radius: 0;
         }
-        
+
+        .custom-annotation text {
+            fill: rgb(4, 4, 26);
+            font-size: 14px;
+            font-weight: bold;
+        }
     </style>
 </head>
 
@@ -121,149 +127,191 @@
         <h1>House Rent Dashboard</h1>
         <h2>Furnishing vs Rent</h2>
         <div id="buttonContainer">
-            <button onclick="location.href='https://arunam2.github.io/page1.html'">1. Average Rent for a house in cities</button>
+            <button onclick="location.href='https://arunam2.github.io/page1.html'">1. Average Rent for a house in
+                cities</button>
             <button onclick="location.href='https://arunam2.github.io/page2.html'">2. Furnishing vs Rent</button>
-            <button onclick="location.href='https://arunam2.github.io/page3.html'">3. Average Square Feet of the house vs Rent</button>
+            <button onclick="location.href='https://arunam2.github.io/page3.html'">3. Average Square Feet of the house
+                vs Rent</button>
         </div>
     </header>
 
     <div class="container">
         <div class="drop-down" id="filter">
-                <label for="cityDropdown">Select City:</label>
-                <select id="cityDropdown">
-                </select>
+            <label for="cityDropdown">Select City:</label>
+            <select id="cityDropdown">
+            </select>
         </div>
         <div class="drop-down" id="filter">
             <label for="BHKDropdown">Select BHK</label>
             <select id="BHKDropdown">
             </select>
-    </div>
+        </div>
         <div class="chart"></div>
     </div>
     <script src="https://d3js.org/d3.v6.min.js"></script>
+    <script src="https://rawgit.com/susielu/d3-annotation/master/d3-annotation.min.js"></script>
     <div class="page1">
-    <script>
-async function init() {
-   const data= await d3.csv('https://arunam2.github.io/dataset/House_Rent_Dataset_filtered.csv');
-console.log(data);
-data.forEach(d => {
-        d.Rent = d.Rent;
-        d.BHK = d.BHK;
-        d.City = d.City;
-        d.FurnishingStatus = d.FurnishingStatus;
-      });
-      console.log(data[0].FurnishingStatus);
+        <script>
+            async function init() {
+                const data = await d3.csv('https://arunam2.github.io/dataset/House_Rent_Dataset_filtered.csv');
+                console.log(data);
+                data.forEach(d => {
+                    d.Rent = d.Rent;
+                    d.BHK = d.BHK;
+                    d.City = d.City;
+                    d.FurnishingStatus = d.FurnishingStatus;
+                });
+                console.log(data[0].FurnishingStatus);
 
-      const cities = Array.from(new Set(data.map(d => d.City)));
-      const dropdown = document.getElementById("cityDropdown");
-      cities.forEach(city => {
-        const option = document.createElement("option");
-        option.text = city;
-        dropdown.add(option);
-      });
-
-      const BHK = Array.from(new Set(data.map(d => d.BHK)));
-      const dropdown1 = document.getElementById("BHKDropdown");
-      BHK.forEach(BHK => {
-        const option = document.createElement("option");
-        option.text = BHK;
-        dropdown1.add(option);
-        console.log(BHK);
-      });
-      console.log(BHK);
-
-
-      function createBarChart(dataset, city, BHK) {
-
-        const filteredData = dataset.filter(item => item.City === city);
-        const filteredData1 = filteredData.filter(item => item.BHK === BHK);
-    const groupedData = d3.group(filteredData1, d => d.FurnishingStatus);
-  
-    const avgRentData = Array.from(groupedData, ([furnishingStatus, values]) => ({
-        FurnishingStatus: furnishingStatus,
-        AvgRent: d3.mean(values, d => d.Rent)
-    }));
-
-    avgRentData.sort((a, b) => a.FurnishingStatus.localeCompare(b.FurnishingStatus));
-
-        const margin = { top: 20, right: 20, bottom: 50, left: 60 };
-            const width = 600 - margin.left - margin.right;
-            const height = 600 - margin.top - margin.bottom;
-
-            var tooltip = d3.select("body")
-                .append("div")
-                .attr("class", "tooltip")
-                .style("opacity", 0);
-
-            const svg = d3.select('.chart')
-                .append('svg')
-                .attr('width', width + margin.left + margin.right)
-                .attr('height', height + margin.top + margin.bottom)
-                .append('g')
-                .attr('transform', `translate(${margin.left},${margin.top})`);
-
-            const xScale = d3.scaleBand()
-                .domain(avgRentData.map(d => d.FurnishingStatus))
-                .range([0, width])
-                .padding(0.2);
-
-            const yScale = d3.scaleLinear()
-                .domain([0, d3.max(avgRentData, d => d.AvgRent)])
-                .range([height, 0]);
-
-            const xAxis = d3.axisBottom(xScale);
-            svg.append('g')
-                .attr('class', 'axis-x')
-                .attr('transform', `translate(0,${height})`)
-                .call(xAxis)
-                .selectAll('text')
-                .style('text-anchor', 'end')
-                .attr('transform', 'rotate(-45)');
-
-
-            const yAxis = d3.axisLeft(yScale);
-            svg.append('g')
-                .attr('class', 'axis-y')
-                .call(yAxis);
-
-            var chart1 = svg.selectAll('.bar')
-                .data(avgRentData)
-                .enter()
-                .append('rect')
-                .attr('class', 'bar')
-                .attr('x', d => xScale(d.FurnishingStatus))
-                .attr('y', d => yScale(d.AvgRent))
-                .attr('width', xScale.bandwidth())
-                .attr('height', d => height - yScale(d.AvgRent));
-
-            chart1.on('mouseover', (event, d) => {
-                tooltip.transition().duration(200).style("opacity", 0.9);
-                tooltip.html( "City: " + city+ "<br/>"+"BHK: " + BHK + "<br/>" + "Avg. Rent: " + d.AvgRent.toFixed(2)+ "<br/>" + "Type: " + d.FurnishingStatus)
-                    .style("left", (event.pageX) + "px")
-                    .style("top", (event.pageY - 28) + "px")
-                    .style("height", "100px");
-            })
-                .on('mouseout', () => {
-                    tooltip.transition().duration(500).style("opacity", 0);
+                const cities = Array.from(new Set(data.map(d => d.City)));
+                const dropdown = document.getElementById("cityDropdown");
+                cities.forEach(city => {
+                    const option = document.createElement("option");
+                    option.text = city;
+                    dropdown.add(option);
                 });
 
-        }
-        function updateChart() {
-        const selectedCity = document.getElementById("cityDropdown").value;
-        const BHK = document.getElementById("BHKDropdown").value;
-        d3.select(".chart svg").remove();
-        createBarChart(data, selectedCity, BHK);
-        }
+                const BHK = Array.from(new Set(data.map(d => d.BHK)));
+                const dropdown1 = document.getElementById("BHKDropdown");
+                BHK.forEach(BHK => {
+                    const option = document.createElement("option");
+                    option.text = BHK;
+                    dropdown1.add(option);
+                    console.log(BHK);
+                });
+                console.log(BHK);
 
-        document.getElementById("cityDropdown").onchange = updateChart;
-        document.getElementById("BHKDropdown").onchange = updateChart;
 
-        const initialCity = cities[0];
-        const initialBHK = BHK[0];
-      createBarChart(data, initialCity, initialBHK);
+                function createBarChart(dataset, city, BHK) {
 
-}
-    </script>
+                    const filteredData = dataset.filter(item => item.City === city);
+                    const filteredData1 = filteredData.filter(item => item.BHK === BHK);
+                    const groupedData = d3.group(filteredData1, d => d.FurnishingStatus);
+
+                    const avgRentData = Array.from(groupedData, ([furnishingStatus, values]) => ({
+                        FurnishingStatus: furnishingStatus,
+                        AvgRent: d3.mean(values, d => d.Rent)
+                    }));
+
+                    avgRentData.sort((a, b) => a.FurnishingStatus.localeCompare(b.FurnishingStatus));
+
+                    const margin = { top: 20, right: 80, bottom: 90, left: 60 };
+                    const width = 600 - margin.left - margin.right;
+                    const height = 600 - margin.top - margin.bottom;
+
+                    var tooltip = d3.select("body")
+                        .append("div")
+                        .attr("class", "tooltip")
+                        .style("opacity", 0);
+
+                    const svg = d3.select('.chart')
+                        .append('svg')
+                        .attr('width', width + margin.left + margin.right)
+                        .attr('height', height + margin.top + margin.bottom)
+                        .append('g')
+                        .attr('transform', `translate(${margin.left},${margin.top})`);
+
+                    const xScale = d3.scaleBand()
+                        .domain(avgRentData.map(d => d.FurnishingStatus))
+                        .range([0, width])
+                        .padding(0.2);
+
+                    const yScale = d3.scaleLinear()
+                        .domain([0, d3.max(avgRentData, d => d.AvgRent)])
+                        .range([height, 0]);
+
+                    const xAxis = d3.axisBottom(xScale);
+                    svg.append('g')
+                        .attr('class', 'axis-x')
+                        .attr('transform', `translate(0,${height})`)
+                        .call(xAxis)
+                        .selectAll('text')
+                        .style('text-anchor', 'end')
+                        .attr('transform', 'rotate(-45)');
+
+
+                    const yAxis = d3.axisLeft(yScale);
+                    svg.append('g')
+                        .attr('class', 'axis-y')
+                        .call(yAxis);
+
+                    var chart1 = svg.selectAll('.bar')
+                        .data(avgRentData)
+                        .enter()
+                        .append('rect')
+                        .attr('class', 'bar')
+                        .attr('x', d => xScale(d.FurnishingStatus))
+                        .attr('y', d => yScale(d.AvgRent))
+                        .attr('width', xScale.bandwidth())
+                        .attr('height', d => height - yScale(d.AvgRent));
+
+                    chart1.on('mouseover', (event, d) => {
+                        tooltip.transition().duration(200).style("opacity", 0.9);
+                        tooltip.html("City: " + city + "<br/>" + "BHK: " + BHK + "<br/>" + "Avg. Rent: " + d.AvgRent.toFixed(2) + "<br/>" + "Type: " + d.FurnishingStatus)
+                            .style("left", (event.pageX) + "px")
+                            .style("top", (event.pageY - 28) + "px")
+                            .style("height", "100px");
+                    })
+                        .on('mouseout', () => {
+                            tooltip.transition().duration(500).style("opacity", 0);
+                        });
+
+                    const annotationsScene2 = [
+                        {
+                            type: d3.annotationLabel,
+                            note: {
+                                label: "Hover over bars to compare furnished and unfurnished rent",
+                                wrap: 200,
+                            },
+                            connector: null,
+                            x: 300,
+                            y: 300,
+                            dy: -100,
+                            dx: -200,
+                        },
+                    ];
+
+                    const makeAnnotationsScene2 = d3.annotation().annotations(annotationsScene2);
+
+                    svg.append("g").call(makeAnnotationsScene2);
+
+
+                    const annotationsScene2_2 = [
+                        {
+                            type: d3.annotationLabel,
+                            note: {
+                                label: "You can interact with the visualization by selecting a city from the drop-down menu above. The chart will dynamically update to show the average rent for both furnished and unfurnished houses in the chosen city.",
+                                wrap: 200,
+                            },
+                            connector: null,
+                            x: 600,
+                            y: 250,
+                            dy: -100,
+                            dx: -200,
+                        },
+                    ];
+
+                    const makeAnnotationsScene2_2 = d3.annotation().annotations(annotationsScene2_2);
+
+                    svg.append("g").call(makeAnnotationsScene2_2);
+
+                }
+                function updateChart() {
+                    const selectedCity = document.getElementById("cityDropdown").value;
+                    const BHK = document.getElementById("BHKDropdown").value;
+                    d3.select(".chart svg").remove();
+                    createBarChart(data, selectedCity, BHK);
+                }
+
+                document.getElementById("cityDropdown").onchange = updateChart;
+                document.getElementById("BHKDropdown").onchange = updateChart;
+
+                const initialCity = cities[0];
+                const initialBHK = BHK[0];
+                createBarChart(data, initialCity, initialBHK);
+
+            }
+        </script>
     </div>
     <div class="container_data">
         <p>The message of this narrative visualization is to explore the trends in house rent prices across different

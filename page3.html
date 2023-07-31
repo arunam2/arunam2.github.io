@@ -82,6 +82,7 @@
             text-align: left;
             left: 200px;
         }
+
         #buttonContainer {
             display: flex;
             justify-content: space-between;
@@ -121,9 +122,11 @@
         <h1>House Rent Dashboard</h1>
         <h2>Average Square Feet of the house vs Rent</h2>
         <div id="buttonContainer">
-            <button onclick="location.href='https://arunam2.github.io/page1.html'">1. Average Rent for a house in cities</button>
+            <button onclick="location.href='https://arunam2.github.io/page1.html'">1. Average Rent for a house in
+                cities</button>
             <button onclick="location.href='https://arunam2.github.io/page2.html'">2. Furnishing vs Rent</button>
-            <button onclick="location.href='https://arunam2.github.io/page3.html'">3. Average Square Feet of the house vs Rent</button>
+            <button onclick="location.href='https://arunam2.github.io/page3.html'">3. Average Square Feet of the house
+                vs Rent</button>
         </div>
     </header>
 
@@ -131,136 +134,175 @@
 
 
         <div class="drop-down" id="filter">
-                <label for="cityDropdown">Select City:</label>
-                <select id="cityDropdown">
-                </select>
+            <label for="cityDropdown">Select City:</label>
+            <select id="cityDropdown">
+            </select>
         </div>
         <div class="drop-down" id="filter">
             <label for="BHKDropdown">Select BHK</label>
             <select id="BHKDropdown">
             </select>
-    </div>
+        </div>
         <div class="chart"></div>
     </div>
     <script src="https://d3js.org/d3.v6.min.js"></script>
+    <script src="https://rawgit.com/susielu/d3-annotation/master/d3-annotation.min.js"></script>
     <div class="page1">
-    <script>
-async function init() {
-   const data= await d3.csv('https://arunam2.github.io/dataset/House_Rent_Dataset_filtered.csv');
-console.log(data);
-data.forEach(d => {
-        d.Rent = d.Rent;
-        d.BHK = d.BHK;
-        d.City = d.City;
-        d.FurnishingStatus = d.FurnishingStatus;
-        d.Size = +d.Size;
-      });
-      console.log(data[0].FurnishingStatus);
+        <script>
+            async function init() {
+                const data = await d3.csv('https://arunam2.github.io/dataset/House_Rent_Dataset_filtered.csv');
+                console.log(data);
+                data.forEach(d => {
+                    d.Rent = d.Rent;
+                    d.BHK = d.BHK;
+                    d.City = d.City;
+                    d.FurnishingStatus = d.FurnishingStatus;
+                    d.Size = +d.Size;
+                });
+                console.log(data[0].FurnishingStatus);
 
-      const cities = Array.from(new Set(data.map(d => d.City)));
-      const dropdown = document.getElementById("cityDropdown");
-      cities.forEach(city => {
-        const option = document.createElement("option");
-        option.text = city;
-        dropdown.add(option);
-      });
+                const cities = Array.from(new Set(data.map(d => d.City)));
+                const dropdown = document.getElementById("cityDropdown");
+                cities.forEach(city => {
+                    const option = document.createElement("option");
+                    option.text = city;
+                    dropdown.add(option);
+                });
 
-      const BHK = Array.from(new Set(data.map(d => d.BHK)));
-      const dropdown1 = document.getElementById("BHKDropdown");
-      BHK.forEach(BHK => {
-        const option = document.createElement("option");
-        option.text = BHK;
-        dropdown1.add(option);
-        console.log(BHK);
-      });
-      console.log(BHK);
+                const BHK = Array.from(new Set(data.map(d => d.BHK)));
+                const dropdown1 = document.getElementById("BHKDropdown");
+                BHK.forEach(BHK => {
+                    const option = document.createElement("option");
+                    option.text = BHK;
+                    dropdown1.add(option);
+                    console.log(BHK);
+                });
+                console.log(BHK);
 
-      function createScatterPlot(dataset, city, BHK) {
-    const filteredData = dataset.filter(item => item.City === city && item.BHK === BHK);
-    const grpData = d3.group(filteredData, d => d.City);
-    const avgRentData = Array.from(grpData, ([City, values]) => ({
-        City:City,
-        AvgRent: d3.mean(values, d => d.Rent)
-      }));
-
-  
-    const margin = { top: 20, right: 20, bottom: 50, left: 60 };
-    const width = 600 - margin.left - margin.right;
-    const height = 600 - margin.top - margin.bottom;
-
-    var tooltip = d3.select("body")
-        .append("div")
-        .attr("class", "tooltip")
-        .style("opacity", 0);
-
-    const svg = d3.select('.chart')
-        .append('svg')
-        .attr('width', width + margin.left + margin.right)
-        .attr('height', height + margin.top + margin.bottom)
-        .append('g')
-        .attr('transform', `translate(${margin.left},${margin.top})`);
-
-    const xScale = d3.scaleLinear()
-        .domain([0, d3.max(filteredData, d => +d.Rent)])
-        .range([0, width]);
-
-    const yScale = d3.scaleLinear()
-        .domain([0, d3.max(filteredData, d => +d.Size)])
-        .range([height, 0]);
-
-    const areaScale = d3.scaleLinear()
-        .domain([0, d3.max(filteredData, d => +d.Size)])
-        .range([5, 25]); // Define the size range for the circles based on the area of the property
-
-    const xAxis = d3.axisBottom(xScale);
-    svg.append('g')
-        .attr('class', 'axis-x')
-        .attr('transform', `translate(0,${height})`)
-        .call(xAxis);
-
-    const yAxis = d3.axisLeft(yScale);
-    svg.append('g')
-        .attr('class', 'axis-y')
-        .call(yAxis);
-
-    var chart1 = svg.selectAll('.circle')
-        .data(filteredData)
-        .enter()
-        .append('circle')
-        .attr('class', 'circle')
-        .attr('cx', d => xScale(+d.Rent))
-        .attr('cy', d => yScale(+d.Size))
-        .attr('r', d => areaScale(+d.Size))
-
-    chart1.on('mouseover', (event, d) => {
-        tooltip.transition().duration(200).style("opacity", 0.9);
-        tooltip.html("City: " + city + "<br/>" + "BHK: " + BHK + "<br/>" + "Rent: " + d.Rent + "<br/>" + "Size: " + d.Size+" sqft")
-            .style("left", (event.pageX) + "px")
-            .style("top", (event.pageY - 28) + "px")
-            .style("height", "auto")
-    })
-    .on('mouseout', () => {
-        tooltip.transition().duration(500).style("opacity", 0);
-    });
-}
-
-function updateChart() {
-    const selectedCity = document.getElementById("cityDropdown").value;
-    const BHK = document.getElementById("BHKDropdown").value;
-    d3.select(".chart svg").remove();
-    createScatterPlot(data, selectedCity, BHK);
-}
-
-document.getElementById("cityDropdown").onchange = updateChart;
-document.getElementById("BHKDropdown").onchange = updateChart;
-
-const initialCity = cities[0];
-const initialBHK = BHK[0];
-createScatterPlot(data, initialCity, initialBHK);
+                function createScatterPlot(dataset, city, BHK) {
+                    const filteredData = dataset.filter(item => item.City === city && item.BHK === BHK);
+                    const grpData = d3.group(filteredData, d => d.City);
+                    const avgRentData = Array.from(grpData, ([City, values]) => ({
+                        City: City,
+                        AvgRent: d3.mean(values, d => d.Rent)
+                    }));
 
 
-}
-    </script>
+                    const margin = { top: 20, right: 20, bottom: 50, left: 60 };
+                    const width = 600 - margin.left - margin.right;
+                    const height = 600 - margin.top - margin.bottom;
+
+                    var tooltip = d3.select("body")
+                        .append("div")
+                        .attr("class", "tooltip")
+                        .style("opacity", 0);
+
+                    const svg = d3.select('.chart')
+                        .append('svg')
+                        .attr('width', width + margin.left + margin.right)
+                        .attr('height', height + margin.top + margin.bottom)
+                        .append('g')
+                        .attr('transform', `translate(${margin.left},${margin.top})`);
+
+                    const xScale = d3.scaleLinear()
+                        .domain([0, d3.max(filteredData, d => +d.Rent)])
+                        .range([0, width]);
+
+                    const yScale = d3.scaleLinear()
+                        .domain([0, d3.max(filteredData, d => +d.Size)])
+                        .range([height, 0]);
+
+                    const areaScale = d3.scaleLinear()
+                        .domain([0, d3.max(filteredData, d => +d.Size)])
+                        .range([5, 25]); // Define the size range for the circles based on the area of the property
+
+                    const xAxis = d3.axisBottom(xScale);
+                    svg.append('g')
+                        .attr('class', 'axis-x')
+                        .attr('transform', `translate(0,${height})`)
+                        .call(xAxis);
+
+                    const yAxis = d3.axisLeft(yScale);
+                    svg.append('g')
+                        .attr('class', 'axis-y')
+                        .call(yAxis);
+
+                    var chart1 = svg.selectAll('.circle')
+                        .data(filteredData)
+                        .enter()
+                        .append('circle')
+                        .attr('class', 'circle')
+                        .attr('cx', d => xScale(+d.Rent))
+                        .attr('cy', d => yScale(+d.Size))
+                        .attr('r', d => areaScale(+d.Size))
+
+                    chart1.on('mouseover', (event, d) => {
+                        tooltip.transition().duration(200).style("opacity", 0.9);
+                        tooltip.html("City: " + city + "<br/>" + "BHK: " + BHK + "<br/>" + "Rent: " + d.Rent + "<br/>" + "Size: " + d.Size + " sqft")
+                            .style("left", (event.pageX) + "px")
+                            .style("top", (event.pageY - 28) + "px")
+                            .style("height", "auto")
+                    })
+                        .on('mouseout', () => {
+                            tooltip.transition().duration(500).style("opacity", 0);
+                        });
+
+                        const annotationsScene3 = [
+                        {
+                            type: d3.annotationLabel,
+                            note: {
+                                label: "In this scene, we examine how the average rent prices correlate with the size of the house in the selected city",
+                                wrap: 200,
+                            },
+                            connector: null,
+                            x: 350,
+                            y: 300,
+                            dy: -100,
+                            dx: -200,
+                        },
+                    ];
+
+                    const makeAnnotationsScene3 = d3.annotation().annotations(annotationsScene3);
+
+                    svg.append("g").call(makeAnnotationsScene3);
+
+
+                    const annotationsScene3_2 = [
+                        {
+                            type: d3.annotationLabel,
+                            note: {
+                                label: "The scatter plot shows the relationship between the average rent prices and the average square footage of houses in the chosen city. It helps users understand whether there is a pattern between the size of the house and its corresponding rent.",
+                                wrap: 200,
+                            },
+                            x: 600,
+                            y: 400,
+                            dy: -100,
+                            dx: -200,
+                        },
+                    ];
+
+                    const makeAnnotationsScene3_2 = d3.annotation().annotations(annotationsScene3_2);
+
+                    svg.append("g").call(makeAnnotationsScene3_2);
+                }
+
+                function updateChart() {
+                    const selectedCity = document.getElementById("cityDropdown").value;
+                    const BHK = document.getElementById("BHKDropdown").value;
+                    d3.select(".chart svg").remove();
+                    createScatterPlot(data, selectedCity, BHK);
+                }
+
+                document.getElementById("cityDropdown").onchange = updateChart;
+                document.getElementById("BHKDropdown").onchange = updateChart;
+
+                const initialCity = cities[0];
+                const initialBHK = BHK[0];
+                createScatterPlot(data, initialCity, initialBHK);
+
+
+            }
+        </script>
     </div>
     <div class="container_data">
         <p>The message of this narrative visualization is to explore the trends in house rent prices across different

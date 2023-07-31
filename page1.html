@@ -120,9 +120,11 @@
         <h1>House Rent Dashboard</h1>
         <h2>Average Rent for a house in the popular cities in India</h2>
         <div id="buttonContainer">
-            <button onclick="location.href='https://arunam2.github.io/page1.html'">1. Average Rent for a house in cities</button>
+            <button onclick="location.href='https://arunam2.github.io/page1.html'">1. Average Rent for a house in
+                cities</button>
             <button onclick="location.href='https://arunam2.github.io/page2.html'">2. Furnishing vs Rent</button>
-            <button onclick="location.href='https://arunam2.github.io/page3.html'">3. Average Square Feet of the house vs Rent</button>
+            <button onclick="location.href='https://arunam2.github.io/page3.html'">3. Average Square Feet of the house
+                vs Rent</button>
         </div>
     </header>
 
@@ -136,6 +138,7 @@
         <div class="chart"></div>
     </div>
     <script src="https://d3js.org/d3.v6.min.js"></script>
+    <script src="https://rawgit.com/susielu/d3-annotation/master/d3-annotation.min.js"></script>
     <div class="page1">
         <script>
             async function init() {
@@ -168,7 +171,7 @@
                     }));
 
                     avgRentData.sort((a, b) => a.BHK - b.BHK);
-                    const margin = { top: 20, right: 20, bottom: 50, left: 60 };
+                    const margin = { top: 20, right: 20, bottom: 70, left: 80 };
                     const width = 600 - margin.left - margin.right;
                     const height = 600 - margin.top - margin.bottom;
 
@@ -202,11 +205,26 @@
                         .style('text-anchor', 'end')
                         .attr('transform', 'rotate(-45)');
 
+                    svg.append("text")
+                        .attr("class", "axis-label")
+                        .attr("x", width / 2)
+                        .attr("y", height + margin.top + 20)
+                        .style("text-anchor", "middle")
+                        .text("BHK");
+
 
                     const yAxis = d3.axisLeft(yScale);
                     svg.append('g')
                         .attr('class', 'axis-y')
                         .call(yAxis);
+
+                    svg.append("text")
+                        .attr("class", "axis-label")
+                        .attr("transform", "rotate(-90)")
+                        .attr("x", -height / 2)
+                        .attr("y", -margin.left + 12)
+                        .style("text-anchor", "middle")
+                        .text("Average Rent");
 
                     var chart1 = svg.selectAll('.bar')
                         .data(avgRentData)
@@ -229,6 +247,46 @@
                             tooltip.transition().duration(500).style("opacity", 0);
                         });
 
+                    const annotationsScene1 = [
+                        {
+                            type: d3.annotationLabel,
+                            note: {
+                                label: "Hover over bars to see average rent values",
+                                wrap: 200,
+                            },
+                            connector: {
+                                end: "arrow",
+                                type: "line",
+                            },
+                            x: 300,
+                            y: 500,
+                            dy: -100,
+                            dx: -100,
+                        },
+                    ];
+
+                    const annotationsScene1_1 = [
+                        {
+                            type: d3.annotationLabel,
+                            note: {
+                                label: " In this scene, we explore the average rent prices for houses in various popular cities in India.",
+                                wrap: 200,
+                            },
+                            connector: {
+                                line: "elbow",
+                            },
+                            x: 225,
+                            y: 200,
+                            dy: -100,
+                            dx: -100,
+                        },
+                    ];
+
+                    const makeAnnotationsScene1 = d3.annotation().annotations(annotationsScene1);
+                    svg.append("g").call(makeAnnotationsScene1);
+
+                    const makeAnnotationsScene1_1 = d3.annotation().annotations(annotationsScene1_1);
+                    svg.append("g").call(makeAnnotationsScene1_1);
                 }
                 function updateChart() {
                     const selectedCity = document.getElementById("cityDropdown").value;
